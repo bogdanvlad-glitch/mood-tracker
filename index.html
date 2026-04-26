@@ -813,6 +813,144 @@
       display: block;
     }
 
+    .launch-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,253,249,0.98), rgba(251,247,242,0.94) 48%, rgba(239,231,222,0.96) 100%);
+      transition: opacity 0.75s ease, transform 0.75s ease, visibility 0.75s ease;
+    }
+
+    .launch-screen.hide {
+      opacity: 0;
+      transform: scale(1.025);
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .launch-content {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      animation: launchRise 1.25s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .launch-icon {
+      width: 94px;
+      height: 94px;
+      border-radius: 34px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #fffdf9, #f4ece7);
+      border: 1px solid #ecdfd5;
+      box-shadow:
+        0 22px 42px rgba(96,78,67,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+      font-size: 42px;
+      margin-bottom: 18px;
+      animation: gentlePulse 1.8s ease-in-out infinite;
+    }
+
+    .launch-title {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 30px;
+      line-height: 1;
+      color: #4b3f39;
+      letter-spacing: -0.7px;
+    }
+
+    .launch-subtitle {
+      margin: 10px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .launch-dots {
+      display: flex;
+      gap: 7px;
+      margin-top: 22px;
+    }
+
+    .launch-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #b59c91;
+      opacity: 0.45;
+      animation: dotBreath 1.2s ease-in-out infinite;
+    }
+
+    .launch-dots span:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+
+    .launch-dots span:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+
+    .phone.app-loaded .top,
+    .phone.app-loaded .content,
+    .phone.app-loaded .bottom-nav {
+      animation: appAppear 0.78s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .phone.app-loaded .content {
+      animation-delay: 0.08s;
+    }
+
+    .phone.app-loaded .bottom-nav {
+      animation-delay: 0.16s;
+    }
+
+    @keyframes launchRise {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes gentlePulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.045);
+      }
+    }
+
+    @keyframes dotBreath {
+      0%, 100% {
+        opacity: 0.35;
+        transform: translateY(0);
+      }
+      50% {
+        opacity: 0.9;
+        transform: translateY(-4px);
+      }
+    }
+
+    @keyframes appAppear {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+        filter: blur(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
     @media (max-width: 460px) {
       body {
         padding: 0;
@@ -847,7 +985,20 @@
   </style>
 </head>
 <body>
-  <div class="phone">
+  <div class="phone" id="phoneApp">
+
+    <div class="launch-screen" id="launchScreen" aria-hidden="true">
+      <div class="launch-content">
+        <div class="launch-icon">✿</div>
+        <h2 class="launch-title">Mon Journal</h2>
+        <p class="launch-subtitle">Un instant pour soi</p>
+        <div class="launch-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
     <div class="status">
       <span id="clock">09:41</span>
       <div class="signal" aria-hidden="true">
@@ -904,10 +1055,6 @@
 
           <button class="save" id="saveBtn">Enregistrer cette page</button>
 
-          <div class="secondary-actions">
-            <button class="mini-btn" id="demoBtn">Charger un exemple</button>
-            <button class="mini-btn danger" id="clearBtn">Tout effacer</button>
-          </div>
         </div>
 
         <div class="section-title">
@@ -1073,7 +1220,11 @@
 
     function loadEntries() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        return raw.map((entry, index) => ({
+          ...entry,
+          createdAt: entry.createdAt || `${entry.date || new Date().toISOString().slice(0, 10)}T12:${String(index).padStart(2, "0")}:00.000Z`
+        }));
       } catch {
         return [];
       }
@@ -1087,12 +1238,24 @@
       return moods.find((mood) => mood.score === Number(score)) || moods[2];
     }
 
+    function entrySortValue(entry) {
+      return entry.createdAt || `${entry.date || ""}T12:00:00.000Z`;
+    }
+
     function sortedAsc() {
-      return [...entries].sort((a, b) => a.date.localeCompare(b.date));
+      return [...entries].sort((a, b) => {
+        const byDate = a.date.localeCompare(b.date);
+        if (byDate !== 0) return byDate;
+        return entrySortValue(a).localeCompare(entrySortValue(b));
+      });
     }
 
     function sortedDesc() {
-      return [...entries].sort((a, b) => b.date.localeCompare(a.date));
+      return [...entries].sort((a, b) => {
+        const byDate = b.date.localeCompare(a.date);
+        if (byDate !== 0) return byDate;
+        return entrySortValue(b).localeCompare(entrySortValue(a));
+      });
     }
 
     function todayKey() {
@@ -1160,7 +1323,8 @@
         month: "long"
       }).format(new Date());
 
-      const todayEntry = entries.find((entry) => entry.date === todayKey());
+      const todayEntries = entries.filter((entry) => entry.date === todayKey()).sort((a, b) => entrySortValue(b).localeCompare(entrySortValue(a)));
+      const todayEntry = todayEntries[0];
       const mood = todayEntry ? moodByScore(todayEntry.score) : moodByScore(selectedScore);
       $("sealMood").textContent = mood.emoji;
       $("todayEmoji").textContent = mood.emoji;
@@ -1272,6 +1436,7 @@
               <div class="entry-meta">
                 <span class="chip">Score ${entry.score}/5</span>
                 <span class="chip">${mood.note}</span>
+                <span class="chip">${new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(entrySortValue(entry)))}</span>
               </div>
             </div>
             <button class="delete" aria-label="Supprimer">×</button>
@@ -1577,10 +1742,10 @@
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         date: dateInput.value,
         score: selectedScore,
-        note: noteInput.value.trim()
+        note: noteInput.value.trim(),
+        createdAt: new Date().toISOString()
       };
 
-      entries = entries.filter((saved) => saved.date !== entry.date);
       entries.push(entry);
       persist();
       noteInput.value = "";
@@ -1588,45 +1753,7 @@
       showToast("Page enregistree");
     });
 
-    $("demoBtn").addEventListener("click", () => {
-      const today = new Date();
-      const demoScores = [2, 3, 4, 3, 4, 5, 4, 5, 3, 4];
-      const demoNotes = [
-        "Journee un peu fragile.",
-        "Je me sens plutot neutre.",
-        "Un peu plus paisible aujourd'hui.",
-        "Fatigue legere mais stable.",
-        "Bonne respiration, bon rythme.",
-        "Tres belle energie.",
-        "Calme et presence.",
-        "Jolie journee lumineuse.",
-        "Retour a quelque chose de neutre.",
-        "Je termine sereinement."
-      ];
 
-      entries = demoScores.map((score, index) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() - (demoScores.length - 1 - index));
-        return {
-          id: String(Date.now() + index),
-          date: date.toISOString().slice(0, 10),
-          score,
-          note: demoNotes[index]
-        };
-      });
-
-      persist();
-      render();
-      showToast("Exemple charge");
-    });
-
-    $("clearBtn").addEventListener("click", () => {
-      if (!confirm("Effacer toutes les pages du journal ?")) return;
-      entries = [];
-      persist();
-      render();
-      showToast("Journal efface");
-    });
 
     document.querySelectorAll(".nav-btn").forEach((button) => {
       button.addEventListener("click", () => {
@@ -1653,6 +1780,16 @@
     window.addEventListener("resize", () => {
       drawLineChart();
       drawDistributionChart();
+    });
+
+
+    window.addEventListener("load", () => {
+      const launchScreen = $("launchScreen");
+      const phoneApp = $("phoneApp");
+      setTimeout(() => {
+        if (launchScreen) launchScreen.classList.add("hide");
+        if (phoneApp) phoneApp.classList.add("app-loaded");
+      }, 950);
     });
 
     setClock();
