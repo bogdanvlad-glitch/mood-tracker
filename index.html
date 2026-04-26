@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mon Journal - Mood Tracker</title>
+  <style>
+    :root {
+      --page: #efe7de;
+      --screen: #fbf7f2;
+      --paper: #fffdf9;
+      --paper-soft: #f6eee7;
+      --ink: #4b3e38;
+      --ink-soft: #8d7c72;
+      --line: #eaded2;
+      --sage: #91aa9d;
+      --sage-deep: #6f8e80;
+      --rose: #d7ada2;
+      --honey: #e8c996;
+      --lavender: #cec3d8;
+      --danger: #b56f61;
+      --danger-bg: #f8e8e3;
+      --shadow: 0 22px 55px rgba(96, 78, 67, 0.11);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(215,173,162,0.45), transparent 32%),
+        radial-gradient(circle at 88% 92%, rgba(206,195,216,0.5), transparent 30%),
+        linear-gradient(180deg, #f5eee7 0%, #efe7de 100%);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .phone {
+      width: min(100%, 430px);
+      height: min(940px, calc(100vh - 36px));
+      min-height: 720px;
+      background: var(--screen);
+      border-radius: 42px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.78);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status {
+      height: 32px;
+      padding: 11px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #7e6d64;
+    }
+
+    .signal {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #b59c91;
+      opacity: 0.8;
+    }
+
+    .top {
+      padding: 20px 24px 10px;
+    }
+
+    .hello {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .hello h1 {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1;
+      letter-spacing: -0.9px;
+      color: #4b3f39;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+    }
+
+    .hello p {
+      margin: 8px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .seal {
+      width: 56px;
+      height: 56px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #f8efe9, #fffdf9);
+      border: 1px solid #ecdfd5;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+      font-size: 24px;
+      flex: 0 0 auto;
+    }
+
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 6px 22px 108px;
+      scroll-behavior: smooth;
+    }
+
+    .view {
+      display: none;
+      animation: fade 0.18s ease;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-card {
+      margin-top: 12px;
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      background: linear-gradient(135deg, rgba(255,253,249,0.95), rgba(247,241,235,0.96));
+      border: 1px solid #eadfd4;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 14px 34px rgba(96, 78, 67, 0.07);
+    }
+
+    .hero-card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(transparent 95%, rgba(226, 212, 203, 0.18) 96%);
+      background-size: 100% 28px;
+      pointer-events: none;
+      opacity: 0.52;
+    }
+
+    .hero-head {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .hero-head span {
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .hero-head strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 20px;
+      color: #54453e;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+    }
+
+    .hero-badge {
+      padding: 7px 10px;
+      background: #f5ece6;
+      border-radius: 999px;
+      color: #8d756a;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 1px solid #eadad0;
+    }
+
+    .hero-mood {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .hero-mood .emoji {
+      width: 62px;
+      height: 62px;
+      border-radius: 23px;
+      background: #fff;
+      border: 1px solid #f0e4da;
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      box-shadow: 0 10px 22px rgba(96, 78, 67, 0.07);
+      flex: 0 0 auto;
+    }
+
+    .hero-mood .text span {
+      display: block;
+      font-size: 25px;
+      font-weight: 700;
+      color: #53443d;
+      letter-spacing: -0.4px;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .hero-mood .text small {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--ink-soft);
+      max-width: 230px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 25px 0 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #564741;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      letter-spacing: -0.25px;
+    }
+
+    .section-title span {
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(96, 78, 67, 0.06);
+    }
+
+    .label {
+      display: block;
+      margin: 0 0 8px;
+      color: #7f7068;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fffdfa;
+      color: var(--ink);
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+      outline: none;
+      font: inherit;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #d4c3b9;
+      box-shadow: 0 0 0 4px rgba(216, 180, 170, 0.18);
+    }
+
+    textarea {
+      min-height: 105px;
+      resize: none;
+      margin-top: 12px;
+      line-height: 1.55;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 15px;
+      background: linear-gradient(transparent 95%, rgba(234, 223, 212, 0.7) 96%);
+      background-size: 100% 32px;
+      padding-top: 14px;
+    }
+
+    .mood-picker {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .mood-btn {
+      min-height: 78px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: #fffdfa;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      padding: 8px 4px;
+      transition: 0.18s ease;
+    }
+
+    .mood-btn b {
+      display: block;
+      font-size: 27px;
+      line-height: 1;
+    }
+
+    .mood-btn span {
+      display: block;
+      margin-top: 7px;
+      font-size: 10px;
+      font-weight: 850;
+      color: var(--ink-soft);
+    }
+
+    .mood-btn.active {
+      background: #f7efe8;
+      border-color: #e4cec2;
+      transform: translateY(-2px);
+      box-shadow: inset 0 0 0 1px rgba(216, 180, 170, 0.32);
+    }
+
+    .save {
+      width: 100%;
+      margin-top: 14px;
+      border: 0;
+      border-radius: 20px;
+      padding: 15px;
+      cursor: pointer;
+      background: linear-gradient(180deg, #9bb2a7, #7f9c91);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      box-shadow: 0 14px 26px rgba(113, 143, 131, 0.24);
+      transition: 0.18s ease;
+    }
+
+    .save:active {
+      transform: scale(0.985);
+    }
+
+    .secondary-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .mini-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px;
+      cursor: pointer;
+      background: #f4ece7;
+      color: #7a675d;
+      font-weight: 900;
+    }
+
+    .mini-btn.danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: #fffdfa;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 9px 22px rgba(96, 78, 67, 0.05);
+    }
+
+    .stat.full {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .stat span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 27px;
+      color: #55453e;
+      letter-spacing: -0.5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+    }
+
+    .trend-pill {
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: #edf3f0;
+      color: var(--sage-deep);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .trend-pill.down {
+      background: #f8e8e3;
+      color: var(--danger);
+    }
+
+    .trend-pill.neutral {
+      background: #eef2f4;
+      color: #748791;
+    }
+
+    .chart-card {
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,253,249,0.98), rgba(250,244,238,0.98));
+    }
+
+    .chart-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .chart-top strong {
+      display: block;
+      color: #55463f;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      line-height: 1.06;
+      letter-spacing: -0.35px;
+      max-width: 240px;
+    }
+
+    .chart-top span,
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f5ece7;
+      border: 1px solid #eaded3;
+      color: #816d64;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .chart-stage {
+      position: relative;
+      height: 280px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid #ecdfd5;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(232,201,150,0.24), transparent 28%),
+        radial-gradient(circle at 88% 20%, rgba(206,195,216,0.22), transparent 32%),
+        linear-gradient(180deg, #fffdfa 0%, #f9f2eb 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    }
+
+    .chart-stage.small {
+      height: 250px;
+    }
+
+    .chart-stage:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(234,222,210,0.18) 1px, transparent 1px),
+        linear-gradient(rgba(234,222,210,0.18) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 88%, transparent 100%);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .chart-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      text-align: center;
+      padding: 26px;
+      color: var(--ink-soft);
+      z-index: 2;
+    }
+
+    .chart-empty.show {
+      display: grid;
+    }
+
+    .chart-empty b {
+      display: block;
+      color: #55463f;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 23px;
+      margin-bottom: 7px;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      min-width: 128px;
+      max-width: 180px;
+      padding: 11px 12px;
+      border-radius: 16px;
+      background: rgba(75, 62, 56, 0.96);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.35;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -112%);
+      transition: opacity 0.15s ease;
+      z-index: 4;
+    }
+
+    .chart-tooltip.show {
+      opacity: 1;
+    }
+
+    .chart-tooltip strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .chart-tooltip small {
+      display: block;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .chart-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .insight-card {
+      border: 1px solid #ecdfd5;
+      border-radius: 20px;
+      padding: 12px;
+      background: rgba(255,253,249,0.76);
+    }
+
+    .insight-card span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 850;
+      margin-bottom: 6px;
+    }
+
+    .insight-card strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      color: #564741;
+      line-height: 1.1;
+    }
+
+    .chart-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .legend-pill {
+      padding: 9px 7px;
+      border-radius: 16px;
+      background: #f6efe9;
+      border: 1px solid #eaded3;
+      color: #806c62;
+      font-size: 11px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .entry-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .entry {
+      background: linear-gradient(180deg, #fffdfa 0%, #fdf8f3 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 14px;
+      box-shadow: 0 9px 22px rgba(96, 78, 67, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entry:before {
+      content: "";
+      position: absolute;
+      left: 23px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(234, 223, 212, 0.9);
+    }
+
+    .entry-row {
+      display: flex;
+      gap: 12px;
+      align-items: start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .entry-emoji {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid #eee1d7;
+      font-size: 24px;
+      flex: 0 0 auto;
+      box-shadow: 0 6px 14px rgba(96,78,67,0.05);
+    }
+
+    .entry-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .entry-date {
+      color: #594942;
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .entry-note {
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.5;
+      font-family: Georgia, "Times New Roman", serif;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .entry-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f5ece7;
+      color: #826f65;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .delete {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 19px;
+      font-weight: 900;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    .empty {
+      padding: 28px 18px;
+      text-align: center;
+      color: var(--ink-soft);
+      border: 1px dashed #d9cbbf;
+      border-radius: 24px;
+      background: rgba(255,253,249,0.72);
+      line-height: 1.55;
+      font-weight: 750;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      height: 74px;
+      border-radius: 28px;
+      background: rgba(255,253,249,0.92);
+      border: 1px solid #ecdfd5;
+      box-shadow: 0 15px 36px rgba(96, 78, 67, 0.13);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      padding: 8px;
+    }
+
+    .nav-btn {
+      border: 0;
+      border-radius: 22px;
+      background: transparent;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 900;
+      transition: 0.18s ease;
+    }
+
+    .nav-btn b {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 20px;
+      line-height: 1;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .nav-btn.active {
+      background: #f5ece7;
+      color: #756258;
+      box-shadow: inset 0 0 0 1px #eaded3;
+    }
+
+    .toast {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 104px;
+      padding: 13px 16px;
+      border-radius: 18px;
+      background: rgba(77, 64, 58, 0.95);
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 850;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: 0.2s ease;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    canvas {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    @media (max-width: 460px) {
+      body {
+        padding: 0;
+        background: var(--screen);
+      }
+
+      .phone {
+        width: 100%;
+        height: 100vh;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        border: 0;
+      }
+
+      .top {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .content {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .bottom-nav {
+        left: 12px;
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="status">
+      <span id="clock">09:41</span>
+      <div class="signal" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <header class="top">
+      <div class="hello">
+        <div>
+          <h1>Mon Journal</h1>
+          <p>Un espace doux pour noter ce que tu ressens.</p>
+        </div>
+        <div class="seal" id="sealMood">✿</div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section id="homeView" class="view active">
+        <div class="hero-card">
+          <div class="hero-head">
+            <div>
+              <span>Page du jour</span>
+              <strong id="todayDateTitle">Aujourd'hui</strong>
+            </div>
+            <div class="hero-badge">journal intime</div>
+          </div>
+
+          <div class="hero-mood">
+            <div class="emoji" id="todayEmoji">🙂</div>
+            <div class="text">
+              <span id="todayLabel">Pas encore note</span>
+              <small id="todayText">Prends un instant pour ecrire comment tu te sens.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <h2>Ecrire une entree</h2>
+          <span>quelques lignes</span>
+        </div>
+
+        <div class="card">
+          <label class="label" for="date">Date</label>
+          <input id="date" type="date" />
+
+          <label class="label" style="margin-top: 14px;">Humeur du moment</label>
+          <div class="mood-picker" id="moodPicker"></div>
+
+          <label class="label" for="note" style="margin-top: 14px;">Ce que tu ressens</label>
+          <textarea id="note" placeholder="Aujourd'hui, je me sens..."></textarea>
+
+          <button class="save" id="saveBtn">Enregistrer cette page</button>
+
+          <div class="secondary-actions">
+            <button class="mini-btn" id="demoBtn">Charger un exemple</button>
+            <button class="mini-btn danger" id="clearBtn">Tout effacer</button>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <h2>Petit apercu</h2>
+          <span>a ton rythme</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <span>Humeur moyenne</span>
+            <strong id="avgHome">-</strong>
+          </div>
+          <div class="stat">
+            <span>Pages ecrites</span>
+            <strong id="countHome">0</strong>
+          </div>
+          <div class="stat full">
+            <div>
+              <span>Tendance</span>
+              <strong id="trendText">Pas encore</strong>
+            </div>
+            <div class="trend-pill neutral" id="trendPill">-</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="chartView" class="view">
+        <div class="section-title">
+          <h2>Visualiser mes humeurs</h2>
+          <span>deux graphiques</span>
+        </div>
+
+        <div class="card chart-card">
+          <div class="chart-top">
+            <strong>Evolution de ton humeur</strong>
+            <span id="evolutionSummary">aucune donnee</span>
+          </div>
+
+          <div class="chart-meta">
+            <div class="insight-card">
+              <span>Derniere humeur</span>
+              <strong id="chartLastMood">-</strong>
+            </div>
+            <div class="insight-card">
+              <span>Moyenne</span>
+              <strong id="chartAverage">-</strong>
+            </div>
+          </div>
+
+          <div class="chart-stage" id="lineChartStage">
+            <canvas id="lineChart"></canvas>
+            <div class="chart-empty" id="lineEmpty">
+              <div>
+                <b>Pas encore de courbe</b>
+                Ajoute quelques humeurs pour voir ton evolution.
+              </div>
+            </div>
+            <div class="chart-tooltip" id="lineTooltip"></div>
+          </div>
+
+          <div class="chart-legend">
+            <div class="legend-pill">Courbe evolutive</div>
+            <div class="legend-pill">Moyenne discrete</div>
+            <div class="legend-pill">Points interactifs</div>
+          </div>
+        </div>
+
+        <div style="height: 14px;"></div>
+
+        <div class="card chart-card">
+          <div class="chart-top">
+            <strong>Combien de fois par humeur</strong>
+            <span id="distributionSummary">0 entree</span>
+          </div>
+
+          <div class="chart-meta">
+            <div class="insight-card">
+              <span>Humeur la plus frequente</span>
+              <strong id="topMood">-</strong>
+            </div>
+            <div class="insight-card">
+              <span>Repartition</span>
+              <strong id="distributionSmall">-</strong>
+            </div>
+          </div>
+
+          <div class="chart-stage small" id="distributionStage">
+            <canvas id="distributionChart"></canvas>
+            <div class="chart-empty" id="distributionEmpty">
+              <div>
+                <b>Pas encore de repartition</b>
+                Ajoute des entrees pour compter tes humeurs.
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-legend">
+            <div class="legend-pill">Neutre</div>
+            <div class="legend-pill">Paisible</div>
+            <div class="legend-pill">Lumineux...</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="historyView" class="view">
+        <div class="section-title">
+          <h2>Pages du journal</h2>
+          <span id="historyCount">0 entree</span>
+        </div>
+        <div class="entry-list" id="entryList"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="homeView">
+        <b>⌂</b>
+        Accueil
+      </button>
+      <button class="nav-btn" data-view="chartView">
+        <b>∿</b>
+        Humeur
+      </button>
+      <button class="nav-btn" data-view="historyView">
+        <b>✎</b>
+        Journal
+      </button>
+    </nav>
+
+    <div class="toast" id="toast">Page enregistree</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "journal-intime-mood-entries-v3";
+    const moods = [
+      { score: 1, emoji: "😞", label: "Lourd", note: "Periode difficile", color: "#d7ada2", fill: "rgba(215,173,162,0.30)" },
+      { score: 2, emoji: "😕", label: "Fragile", note: "Un peu bas", color: "#e4c1b7", fill: "rgba(228,193,183,0.30)" },
+      { score: 3, emoji: "😐", label: "Neutre", note: "Assez stable", color: "#cec3d8", fill: "rgba(206,195,216,0.30)" },
+      { score: 4, emoji: "🙂", label: "Paisible", note: "Plutot bien", color: "#e8c996", fill: "rgba(232,201,150,0.30)" },
+      { score: 5, emoji: "😄", label: "Lumineux", note: "Tres belle energie", color: "#91aa9d", fill: "rgba(145,170,157,0.32)" }
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    const dateInput = $("date");
+    const noteInput = $("note");
+    const moodPicker = $("moodPicker");
+    const entryList = $("entryList");
+
+    const lineCanvas = $("lineChart");
+    const lineCtx = lineCanvas.getContext("2d");
+    const lineTooltip = $("lineTooltip");
+    const lineEmpty = $("lineEmpty");
+
+    const distCanvas = $("distributionChart");
+    const distCtx = distCanvas.getContext("2d");
+    const distributionEmpty = $("distributionEmpty");
+
+    let selectedScore = 4;
+    let entries = loadEntries();
+    let linePoints = [];
+
+    dateInput.valueAsDate = new Date();
+
+    function loadEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function moodByScore(score) {
+      return moods.find((mood) => mood.score === Number(score)) || moods[2];
+    }
+
+    function sortedAsc() {
+      return [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function sortedDesc() {
+      return [...entries].sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function todayKey() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function formatDate(date) {
+      return new Intl.DateTimeFormat("fr-FR", {
+        weekday: "short",
+        day: "2-digit",
+        month: "long"
+      }).format(new Date(date + "T12:00:00"));
+    }
+
+    function shortDate(date) {
+      return new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "short"
+      }).format(new Date(date + "T12:00:00"));
+    }
+
+    function fullDate(date) {
+      return new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(new Date(date + "T12:00:00"));
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setClock() {
+      $("clock").textContent = new Intl.DateTimeFormat("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date());
+    }
+
+    function renderMoodPicker() {
+      moodPicker.innerHTML = "";
+      moods.forEach((mood) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mood-btn" + (mood.score === selectedScore ? " active" : "");
+        btn.innerHTML = `<div><b>${mood.emoji}</b><span>${mood.label}</span></div>`;
+        btn.addEventListener("click", () => {
+          selectedScore = mood.score;
+          renderMoodPicker();
+        });
+        moodPicker.appendChild(btn);
+      });
+    }
+
+    function renderToday() {
+      $("todayDateTitle").textContent = new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "long"
+      }).format(new Date());
+
+      const todayEntry = entries.find((entry) => entry.date === todayKey());
+      const mood = todayEntry ? moodByScore(todayEntry.score) : moodByScore(selectedScore);
+      $("sealMood").textContent = mood.emoji;
+      $("todayEmoji").textContent = mood.emoji;
+      $("todayLabel").textContent = todayEntry ? mood.label : "Pas encore note";
+      $("todayText").textContent = todayEntry
+        ? (todayEntry.note || "Cette page a bien ete enregistree.")
+        : "Prends un instant pour ecrire comment tu te sens.";
+    }
+
+    function getStats() {
+      if (!entries.length) return null;
+      const scores = entries.map((entry) => Number(entry.score));
+      const avg = scores.reduce((sum, value) => sum + value, 0) / scores.length;
+      const best = Math.max(...scores);
+      const worst = Math.min(...scores);
+      const ordered = sortedAsc();
+      const first = ordered[0];
+      const last = ordered[ordered.length - 1];
+      const delta = Number(last.score) - Number(first.score);
+      return { scores, avg, best, worst, first, last, delta };
+    }
+
+    function getMoodCounts() {
+      const counts = new Map(moods.map((mood) => [mood.score, 0]));
+      entries.forEach((entry) => counts.set(entry.score, counts.get(entry.score) + 1));
+      return moods.map((mood) => ({ ...mood, count: counts.get(mood.score) || 0 }));
+    }
+
+    function renderStats() {
+      const stats = getStats();
+      const counts = getMoodCounts();
+
+      if (!stats) {
+        $("avgHome").textContent = "-";
+        $("countHome").textContent = "0";
+        $("trendText").textContent = "Pas encore";
+        $("trendPill").textContent = "-";
+        $("trendPill").className = "trend-pill neutral";
+        $("historyCount").textContent = "0 entree";
+        $("evolutionSummary").textContent = "aucune donnee";
+        $("chartLastMood").textContent = "-";
+        $("chartAverage").textContent = "-";
+        $("distributionSummary").textContent = "0 entree";
+        $("topMood").textContent = "-";
+        $("distributionSmall").textContent = "-";
+        $("bestMood").textContent = "-";
+        $("worstMood").textContent = "-";
+        $("lastMood").textContent = "-";
+        $("lastScore").textContent = "-";
+        return;
+      }
+
+      $("avgHome").textContent = stats.avg.toFixed(1) + "/5";
+      $("countHome").textContent = String(entries.length);
+      $("bestMood").textContent = moodByScore(stats.best).emoji + " " + moodByScore(stats.best).label;
+      $("worstMood").textContent = moodByScore(stats.worst).emoji + " " + moodByScore(stats.worst).label;
+
+      const lastMood = moodByScore(stats.last.score);
+      $("lastMood").textContent = lastMood.emoji + " " + lastMood.label;
+      $("lastScore").textContent = stats.last.score + "/5";
+      $("historyCount").textContent = entries.length + (entries.length > 1 ? " pages" : " page");
+      $("evolutionSummary").textContent = entries.length + (entries.length > 1 ? " pages" : " page");
+      $("chartLastMood").textContent = lastMood.emoji + " " + lastMood.label;
+      $("chartAverage").textContent = stats.avg.toFixed(1);
+      $("distributionSummary").textContent = entries.length + (entries.length > 1 ? " entrees" : " entree");
+
+      const topCount = Math.max(...counts.map((item) => item.count));
+      const topMood = counts.find((item) => item.count === topCount && item.count > 0);
+      $("topMood").textContent = topMood ? (topMood.emoji + " " + topMood.label) : "-";
+      $("distributionSmall").textContent = counts.filter((item) => item.count > 0).length + "/5";
+
+      if (stats.delta > 0) {
+        $("trendText").textContent = "Plus leger";
+        $("trendPill").textContent = "+" + stats.delta;
+        $("trendPill").className = "trend-pill";
+      } else if (stats.delta < 0) {
+        $("trendText").textContent = "Un peu plus lourd";
+        $("trendPill").textContent = String(stats.delta);
+        $("trendPill").className = "trend-pill down";
+      } else {
+        $("trendText").textContent = "Stable";
+        $("trendPill").textContent = "0";
+        $("trendPill").className = "trend-pill neutral";
+      }
+    }
+
+    function renderHistory() {
+      entryList.innerHTML = "";
+      if (!entries.length) {
+        entryList.innerHTML = `
+          <div class="empty">
+            Ton journal est encore vide.<br />
+            Ecris ta premiere page quand tu veux.
+          </div>
+        `;
+        return;
+      }
+
+      sortedDesc().forEach((entry) => {
+        const mood = moodByScore(entry.score);
+        const item = document.createElement("article");
+        item.className = "entry";
+        item.innerHTML = `
+          <div class="entry-row">
+            <div class="entry-emoji">${mood.emoji}</div>
+            <div class="entry-main">
+              <div class="entry-date">${formatDate(entry.date)} · ${mood.label}</div>
+              <div class="entry-note">${entry.note ? escapeHtml(entry.note) : "Aucune note pour cette page."}</div>
+              <div class="entry-meta">
+                <span class="chip">Score ${entry.score}/5</span>
+                <span class="chip">${mood.note}</span>
+              </div>
+            </div>
+            <button class="delete" aria-label="Supprimer">×</button>
+          </div>
+        `;
+
+        item.querySelector(".delete").addEventListener("click", () => {
+          entries = entries.filter((saved) => saved.id !== entry.id);
+          persist();
+          render();
+          showToast("Page supprimee");
+        });
+
+        entryList.appendChild(item);
+      });
+    }
+
+    function prepareCanvas(canvas, ctx) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      return rect;
+    }
+
+    function yForScore(score, pad, h) {
+      return pad.top + h - ((Number(score) - 1) / 4) * h;
+    }
+
+    function drawSmoothPath(ctx, points) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const current = points[i];
+        const next = points[i + 1];
+        const cp1x = current.x + (next.x - current.x) * 0.45;
+        const cp1y = current.y;
+        const cp2x = current.x + (next.x - current.x) * 0.55;
+        const cp2y = next.y;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
+      }
+    }
+
+    function drawLineChart() {
+      const box = prepareCanvas(lineCanvas, lineCtx);
+      linePoints = [];
+      hideLineTooltip();
+
+      const data = sortedAsc();
+      lineEmpty.classList.toggle("show", data.length === 0);
+      if (!data.length) return;
+
+      const pad = { top: 24, right: 18, bottom: 42, left: 38 };
+      const w = box.width - pad.left - pad.right;
+      const h = box.height - pad.top - pad.bottom;
+
+      moods.slice().reverse().forEach((mood) => {
+        const topY = mood.score === 5 ? pad.top : yForScore(mood.score + 0.5, pad, h);
+        const bottomY = mood.score === 1 ? pad.top + h : yForScore(mood.score - 0.5, pad, h);
+        lineCtx.fillStyle = mood.fill;
+        lineCtx.fillRect(pad.left, topY, w, bottomY - topY);
+      });
+
+      for (let score = 1; score <= 5; score++) {
+        const y = yForScore(score, pad, h);
+        lineCtx.strokeStyle = "rgba(139,124,116,0.12)";
+        lineCtx.lineWidth = 1;
+        lineCtx.beginPath();
+        lineCtx.moveTo(pad.left, y);
+        lineCtx.lineTo(pad.left + w, y);
+        lineCtx.stroke();
+
+        lineCtx.fillStyle = "rgba(75,62,56,0.62)";
+        lineCtx.font = "12px Arial";
+        lineCtx.textAlign = "left";
+        lineCtx.fillText(String(score), 12, y + 4);
+      }
+
+      const points = data.map((entry, index) => {
+        const x = data.length === 1 ? pad.left + w / 2 : pad.left + (index / (data.length - 1)) * w;
+        const y = yForScore(entry.score, pad, h);
+        return { x, y, entry, mood: moodByScore(entry.score) };
+      });
+
+      const avg = data.reduce((sum, entry) => sum + Number(entry.score), 0) / data.length;
+      const avgY = yForScore(avg, pad, h);
+      lineCtx.strokeStyle = "rgba(117, 98, 88, 0.44)";
+      lineCtx.lineWidth = 1.5;
+      lineCtx.setLineDash([6, 6]);
+      lineCtx.beginPath();
+      lineCtx.moveTo(pad.left, avgY);
+      lineCtx.lineTo(pad.left + w, avgY);
+      lineCtx.stroke();
+      lineCtx.setLineDash([]);
+      lineCtx.fillStyle = "rgba(75,62,56,0.62)";
+      lineCtx.font = "800 11px Arial";
+      lineCtx.textAlign = "right";
+      lineCtx.fillText("moy.", pad.left + w - 4, avgY - 8);
+
+      if (points.length > 1) {
+        const areaGradient = lineCtx.createLinearGradient(0, pad.top, 0, pad.top + h);
+        areaGradient.addColorStop(0, "rgba(145,170,157,0.24)");
+        areaGradient.addColorStop(0.55, "rgba(232,201,150,0.08)");
+        areaGradient.addColorStop(1, "rgba(215,173,162,0.02)");
+
+        lineCtx.fillStyle = areaGradient;
+        lineCtx.beginPath();
+        lineCtx.moveTo(points[0].x, pad.top + h);
+        lineCtx.lineTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const current = points[i];
+          const next = points[i + 1];
+          const cp1x = current.x + (next.x - current.x) * 0.45;
+          const cp1y = current.y;
+          const cp2x = current.x + (next.x - current.x) * 0.55;
+          const cp2y = next.y;
+          lineCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
+        }
+        lineCtx.lineTo(points[points.length - 1].x, pad.top + h);
+        lineCtx.closePath();
+        lineCtx.fill();
+
+        lineCtx.save();
+        lineCtx.shadowColor = "rgba(113,143,131,0.28)";
+        lineCtx.shadowBlur = 14;
+        lineCtx.shadowOffsetY = 8;
+        lineCtx.strokeStyle = "#7f9c91";
+        lineCtx.lineWidth = 5;
+        lineCtx.lineCap = "round";
+        lineCtx.lineJoin = "round";
+        drawSmoothPath(lineCtx, points);
+        lineCtx.stroke();
+        lineCtx.restore();
+
+        lineCtx.strokeStyle = "rgba(255,253,249,0.76)";
+        lineCtx.lineWidth = 2;
+        drawSmoothPath(lineCtx, points);
+        lineCtx.stroke();
+      } else {
+        const single = points[0];
+        lineCtx.strokeStyle = "rgba(127,156,145,0.35)";
+        lineCtx.lineWidth = 4;
+        lineCtx.beginPath();
+        lineCtx.moveTo(pad.left + w * 0.2, single.y);
+        lineCtx.lineTo(pad.left + w * 0.8, single.y);
+        lineCtx.stroke();
+      }
+
+      points.forEach((point, index) => {
+        const isLast = index === points.length - 1;
+        lineCtx.save();
+        lineCtx.shadowColor = "rgba(96,78,67,0.16)";
+        lineCtx.shadowBlur = isLast ? 12 : 8;
+        lineCtx.shadowOffsetY = 4;
+        lineCtx.fillStyle = "#fffdf9";
+        lineCtx.strokeStyle = isLast ? "#d7ada2" : "#91aa9d";
+        lineCtx.lineWidth = isLast ? 4 : 3;
+        lineCtx.beginPath();
+        lineCtx.arc(point.x, point.y, isLast ? 9.5 : 7.2, 0, Math.PI * 2);
+        lineCtx.fill();
+        lineCtx.stroke();
+        lineCtx.restore();
+
+        if (points.length <= 6 || isLast) {
+          lineCtx.font = "15px Arial";
+          lineCtx.textAlign = "center";
+          lineCtx.fillStyle = "#594942";
+          lineCtx.fillText(point.mood.emoji, point.x, point.y - 15);
+        }
+
+        linePoints.push(point);
+      });
+
+      const maxLabels = box.width < 380 ? 4 : 5;
+      const step = Math.max(1, Math.ceil(data.length / maxLabels));
+      data.forEach((entry, index) => {
+        if (index % step !== 0 && index !== data.length - 1) return;
+        const point = points[index];
+        lineCtx.fillStyle = "#8b7c74";
+        lineCtx.font = "800 10px Arial";
+        lineCtx.textAlign = "center";
+        lineCtx.fillText(shortDate(entry.date), point.x, pad.top + h + 28);
+      });
+    }
+
+    function drawDistributionChart() {
+      const box = prepareCanvas(distCanvas, distCtx);
+      const counts = getMoodCounts();
+      const total = counts.reduce((sum, item) => sum + item.count, 0);
+      distributionEmpty.classList.toggle("show", total === 0);
+      if (!total) return;
+
+      const pad = { top: 24, right: 24, bottom: 20, left: 88 };
+      const w = box.width - pad.left - pad.right;
+      const rowH = 34;
+      const gap = 10;
+      const maxCount = Math.max(...counts.map((item) => item.count), 1);
+
+      counts.forEach((item, index) => {
+        const y = pad.top + index * (rowH + gap);
+        const width = item.count === 0 ? 0 : (item.count / maxCount) * w;
+        const percent = Math.round((item.count / total) * 100);
+
+        distCtx.fillStyle = "rgba(255,255,255,0.55)";
+        distCtx.beginPath();
+        distCtx.roundRect(pad.left, y, w, rowH, 16);
+        distCtx.fill();
+
+        distCtx.fillStyle = item.fill;
+        if (width > 0) {
+          distCtx.beginPath();
+          distCtx.roundRect(pad.left, y, Math.max(24, width), rowH, 16);
+          distCtx.fill();
+        }
+
+        distCtx.fillStyle = "#55463f";
+        distCtx.font = "13px Arial";
+        distCtx.textAlign = "left";
+        distCtx.fillText(item.emoji + " " + item.label, 12, y + 21);
+
+        distCtx.fillStyle = "#6c5a52";
+        distCtx.font = "800 12px Arial";
+        distCtx.textAlign = "right";
+        distCtx.fillText(item.count + " fois", pad.left + w - 6, y + 21);
+
+        if (item.count > 0) {
+          distCtx.fillStyle = "rgba(75,62,56,0.58)";
+          distCtx.font = "700 11px Arial";
+          distCtx.textAlign = "left";
+          distCtx.fillText(percent + "%", pad.left + 12, y + 22);
+        }
+      });
+    }
+
+    function linePointerPos(evt) {
+      const rect = lineCanvas.getBoundingClientRect();
+      const point = evt.touches ? evt.touches[0] : evt;
+      return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+    }
+
+    function showLineTooltip(point) {
+      lineTooltip.innerHTML = `
+        <strong>${point.mood.emoji} ${point.mood.label}</strong>
+        ${fullDate(point.entry.date)}
+        <small>Score ${point.entry.score}/5${point.entry.note ? " · " + escapeHtml(point.entry.note.slice(0, 55)) : ""}</small>
+      `;
+      lineTooltip.style.left = point.x + "px";
+      lineTooltip.style.top = point.y + "px";
+      lineTooltip.classList.add("show");
+    }
+
+    function hideLineTooltip() {
+      lineTooltip.classList.remove("show");
+    }
+
+    function handleLineMove(evt) {
+      if (!linePoints.length) return;
+      const pos = linePointerPos(evt);
+      let nearest = null;
+      let minDist = Infinity;
+      linePoints.forEach((point) => {
+        const dx = point.x - pos.x;
+        const dy = point.y - pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = point;
+        }
+      });
+      if (nearest && minDist < 48) {
+        showLineTooltip(nearest);
+      } else {
+        hideLineTooltip();
+      }
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1450);
+    }
+
+    function render() {
+      renderMoodPicker();
+      renderToday();
+      renderStats();
+      renderHistory();
+      drawLineChart();
+      drawDistributionChart();
+    }
+
+    $("saveBtn").addEventListener("click", () => {
+      if (!dateInput.value) {
+        showToast("Choisis une date");
+        return;
+      }
+
+      const entry = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: dateInput.value,
+        score: selectedScore,
+        note: noteInput.value.trim()
+      };
+
+      entries = entries.filter((saved) => saved.date !== entry.date);
+      entries.push(entry);
+      persist();
+      noteInput.value = "";
+      render();
+      showToast("Page enregistree");
+    });
+
+    $("demoBtn").addEventListener("click", () => {
+      const today = new Date();
+      const demoScores = [2, 3, 4, 3, 4, 5, 4, 5, 3, 4];
+      const demoNotes = [
+        "Journee un peu fragile.",
+        "Je me sens plutot neutre.",
+        "Un peu plus paisible aujourd'hui.",
+        "Fatigue legere mais stable.",
+        "Bonne respiration, bon rythme.",
+        "Tres belle energie.",
+        "Calme et presence.",
+        "Jolie journee lumineuse.",
+        "Retour a quelque chose de neutre.",
+        "Je termine sereinement."
+      ];
+
+      entries = demoScores.map((score, index) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (demoScores.length - 1 - index));
+        return {
+          id: String(Date.now() + index),
+          date: date.toISOString().slice(0, 10),
+          score,
+          note: demoNotes[index]
+        };
+      });
+
+      persist();
+      render();
+      showToast("Exemple charge");
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+      if (!confirm("Effacer toutes les pages du journal ?")) return;
+      entries = [];
+      persist();
+      render();
+      showToast("Journal efface");
+    });
+
+    document.querySelectorAll(".nav-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.view;
+        document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+        document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+        button.classList.add("active");
+        $(target).classList.add("active");
+        if (target === "chartView") {
+          requestAnimationFrame(() => {
+            drawLineChart();
+            drawDistributionChart();
+          });
+        }
+      });
+    });
+
+    lineCanvas.addEventListener("mousemove", handleLineMove);
+    lineCanvas.addEventListener("mouseleave", hideLineTooltip);
+    lineCanvas.addEventListener("touchstart", handleLineMove, { passive: true });
+    lineCanvas.addEventListener("touchmove", handleLineMove, { passive: true });
+    lineCanvas.addEventListener("touchend", hideLineTooltip, { passive: true });
+
+    window.addEventListener("resize", () => {
+      drawLineChart();
+      drawDistributionChart();
+    });
+
+    setClock();
+    setInterval(setClock, 1000 * 20);
+    render();
+  </script>
+</body>
+</html>
