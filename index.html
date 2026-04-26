@@ -1188,6 +1188,12 @@
 
   <script>
     const STORAGE_KEY = "journal-intime-mood-entries-v3";
+    const STORAGE_FALLBACK_KEYS = [
+      "journal-intime-mood-entries-v2",
+      "journal-intime-mood-entries",
+      "moodly-serene-entries",
+      "moodly-mobile-entries"
+    ];
     const moods = [
       { score: 1, emoji: "😞", label: "Lourd", note: "Periode difficile", color: "#d7ada2", fill: "rgba(215,173,162,0.30)" },
       { score: 2, emoji: "😕", label: "Fragile", note: "Un peu bas", color: "#e4c1b7", fill: "rgba(228,193,183,0.30)" },
@@ -1216,18 +1222,36 @@
     let entries = loadEntries();
     let linePoints = [];
 
-    dateInput.valueAsDate = new Date();
+    function localDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    dateInput.value = localDateKey();
 
     function loadEntries() {
-      try {
-        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        return raw.map((entry, index) => ({
-          ...entry,
-          createdAt: entry.createdAt || `${entry.date || new Date().toISOString().slice(0, 10)}T12:${String(index).padStart(2, "0")}:00.000Z`
-        }));
-      } catch {
-        return [];
+      const keys = [STORAGE_KEY, ...STORAGE_FALLBACK_KEYS];
+
+      for (const key of keys) {
+        try {
+          const raw = JSON.parse(localStorage.getItem(key)) || [];
+          if (!Array.isArray(raw) || raw.length === 0) continue;
+
+          return raw.map((entry, index) => ({
+            id: entry.id || `entry-${Date.now()}-${index}`,
+            date: entry.date || localDateKey(),
+            score: Number(entry.score || entry.mood || 3),
+            note: entry.note || "",
+            createdAt: entry.createdAt || `${entry.date || localDateKey()}T12:${String(index).padStart(2, "0")}:00.000Z`
+          }));
+        } catch {
+          // Try the next key.
+        }
       }
+
+      return [];
     }
 
     function persist() {
@@ -1259,7 +1283,7 @@
     }
 
     function todayKey() {
-      return new Date().toISOString().slice(0, 10);
+      return localDateKey();
     }
 
     function formatDate(date) {
@@ -1624,6 +1648,21 @@
       });
     }
 
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
     function drawDistributionChart() {
       const box = prepareCanvas(distCanvas, distCtx);
       const counts = getMoodCounts();
@@ -1644,13 +1683,13 @@
 
         distCtx.fillStyle = "rgba(255,255,255,0.55)";
         distCtx.beginPath();
-        distCtx.roundRect(pad.left, y, w, rowH, 16);
+        drawRoundedRect(distCtx, pad.left, y, w, rowH, 16);
         distCtx.fill();
 
         distCtx.fillStyle = item.fill;
         if (width > 0) {
           distCtx.beginPath();
-          distCtx.roundRect(pad.left, y, Math.max(24, width), rowH, 16);
+          drawRoundedRect(distCtx, pad.left, y, Math.max(24, width), rowH, 16);
           distCtx.fill();
         }
 
@@ -1732,6 +1771,24 @@
       drawDistributionChart();
     }
 
+    function switchView(target) {
+      document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+      document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+
+      const activeButton = document.querySelector(`.nav-btn[data-view="${target}"]`);
+      const activeView = $(target);
+
+      if (activeButton) activeButton.classList.add("active");
+      if (activeView) activeView.classList.add("active");
+
+      if (target === "chartView") {
+        requestAnimationFrame(() => {
+          drawLineChart();
+          drawDistributionChart();
+        });
+      }
+    }
+
     $("saveBtn").addEventListener("click", () => {
       if (!dateInput.value) {
         showToast("Choisis une date");
@@ -1739,7 +1796,7 @@
       }
 
       const entry = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `entry-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         date: dateInput.value,
         score: selectedScore,
         note: noteInput.value.trim(),
@@ -1750,25 +1807,14 @@
       persist();
       noteInput.value = "";
       render();
-      showToast("Page enregistree");
+      switchView("historyView");
+      showToast("Page ajoutee au journal");
     });
 
 
 
     document.querySelectorAll(".nav-btn").forEach((button) => {
-      button.addEventListener("click", () => {
-        const target = button.dataset.view;
-        document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
-        document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-        button.classList.add("active");
-        $(target).classList.add("active");
-        if (target === "chartView") {
-          requestAnimationFrame(() => {
-            drawLineChart();
-            drawDistributionChart();
-          });
-        }
-      });
+      button.addEventListener("click", () => switchView(button.dataset.view));
     });
 
     lineCanvas.addEventListener("mousemove", handleLineMove);
